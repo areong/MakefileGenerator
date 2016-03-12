@@ -38,6 +38,9 @@ class CodeFile:
         self.hasFoundAllDependentFiles = True
         return self.dependentFiles
 
+    def getSortingKey(self):
+        return self.path + self.filename
+
 class Package:
     def __init__(self, root, path):
         self.root = root
@@ -55,6 +58,8 @@ class Package:
         self.cppFiles.append(codeFile)
 
     def generateMakefile(self):
+        self.cppFiles.sort(key=lambda codeFile: codeFile.getSortingKey())
+
         self.content = ''
         self.printVariables()
         self.printTargetAll()
@@ -81,7 +86,7 @@ class Package:
         for codeFile in self.cppFiles:
             variableName = 'HEADERS_' + codeFile.basename.upper()
             self.content += variableName + ' = '
-            for dependentFile in codeFile.dependentFiles:
+            for dependentFile in sorted(codeFile.dependentFiles, key=lambda codeFile: codeFile.getSortingKey()):
                 self.content += '\\\n\t' + self.pathToRoot + dependentFile.path + dependentFile.filename
             self.content += '\n\n'
 
@@ -122,7 +127,7 @@ class RootPackage(Package):
         self.libs = libs
 
     def setAllPackages(self, allPackages):
-        self.allPackages = allPackages
+        self.allPackages = sorted(allPackages, key=lambda package: package.path)
 
     def printVariables(self):
         self.content = ''
