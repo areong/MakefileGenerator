@@ -79,7 +79,6 @@ class Package:
         Create variables of the compiler, include path and headers.
         Assume all CodeFiles have found their dependent files.
         """
-        self.content += 'CC = g++ -std=c++11\n'
         self.content += 'INC = -I ' + self.pathToRoot + '\n'
 
         # Headers
@@ -108,8 +107,8 @@ class Package:
         for codeFile in self.cppFiles:
             basename = codeFile.basename
             self.content += basename + '.o: ' + basename + '.cpp '
-            self.content += '${HEADERS_' + basename.upper() + '}\n'
-            self.content += '\t${CC} -c ' + basename + '.cpp ${INC}\n'
+            self.content += '$(HEADERS_' + basename.upper() + ')\n'
+            self.content += '\t$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c ' + basename + '.cpp $(INC)\n'
 
     def printTargetClean(self):
         self.content += 'clean: \n\trm *.o\n'
@@ -130,7 +129,7 @@ class RootPackage(Package):
         self.allPackages = sorted(allPackages, key=lambda package: package.path)
 
     def printVariables(self):
-        self.content = ''
+        self.content += 'CXXFLAGS = -std=c++11\n'
         super().printVariables()
 
         # Object files
@@ -140,7 +139,7 @@ class RootPackage(Package):
         self.content += '\n\n'
 
         # Libraries
-        self.content += 'LIBS ='
+        self.content += 'LDLIBS ='
         for lib in self.libs:
             self.content += ' -l' + lib
         self.content += '\n\n'
@@ -156,8 +155,8 @@ class RootPackage(Package):
         self.content += '\tmake ' + self.executableName + '\n'
 
     def printTargetExecutable(self):
-        self.content += self.executableName + ': ${OBJECTS}\n'
-        self.content += '\t${CC} ${OBJECTS} ${LIBS} -o ' + self.executableName + '\n'
+        self.content += self.executableName + ': $(OBJECTS)\n'
+        self.content += '\t$(CXX) $(LDFLAGS) $(OBJECTS) $(LDLIBS) -o ' + self.executableName + '\n'
 
     def printTargetClean(self):
         self.content += 'clean:\n'
